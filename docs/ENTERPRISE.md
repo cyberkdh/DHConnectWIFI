@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document focuses on enterprise Wi-Fi usage with PEAP/MSCHAPv2.
+This document focuses on 802.1X enterprise Wi-Fi usage with PEAP/MSCHAPv2.
 
 ## Supported Enterprise Scope
 
@@ -10,6 +10,16 @@ The current implementation is validated for:
 
 - WPA-Enterprise with AES-CCMP
 - WPA2/WPA3-Enterprise with AES-CCMP
+
+## Validation Environment
+
+Enterprise authentication was validated against a real FreeRADIUS test environment on CentOS.
+
+The validation included:
+
+- Windows client connection with DHConnectWIFI
+- PEAP/MSCHAPv2 authentication flow
+- FreeRADIUS debug verification through `radius -X`
 
 ## Basic Command
 

@@ -8,7 +8,7 @@ This guide focuses on practical usage examples for:
 
 - scanning networks
 - connecting to open or personal networks
-- connecting to enterprise networks
+- connecting to 802.1X enterprise networks
 - reconnecting with a stored profile
 - deleting a stored profile
 - handling hidden SSID networks
@@ -77,9 +77,9 @@ Supported personal modes in the current implementation:
 - `WPA-PSK`
 - `WPA2/WPA3-Personal`
 
-## 3. Connect to Enterprise Wi-Fi
+## 3. Connect to 802.1X Enterprise Wi-Fi
 
-Enterprise connection is designed around PEAP/MSCHAPv2 in the current implementation.
+802.1X enterprise connection is designed around PEAP/MSCHAPv2 in the current implementation.
 
 Basic enterprise example:
 

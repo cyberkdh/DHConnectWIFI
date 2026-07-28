@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - WPA-Enterprise with AES-CCMP
 - WPA2/WPA3-Enterprise with AES-CCMP
 - Hidden SSID workflow
+- 802.1X enterprise authentication verified against a real FreeRADIUS environment on CentOS by using `radius -X`
 
 ### Known Limits
 

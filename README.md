@@ -10,7 +10,7 @@ It supports common Wi-Fi workflows such as scanning available networks, connecti
 - Show optional BSSID information
 - Connect to open networks
 - Connect to personal networks such as WPA-PSK and WPA2-Personal
-- Connect to enterprise networks such as WPA-Enterprise and WPA2-Enterprise with PEAP/MSCHAPv2
+- Connect to 802.1X enterprise networks such as WPA-Enterprise and WPA2-Enterprise by using PEAP/MSCHAPv2
 - Reconnect by using an existing Windows WLAN profile
 - Delete an existing Windows WLAN profile
 - Handle hidden SSID connections with direct options or console fallback selection
@@ -107,7 +107,9 @@ DHConnectWIFI.exe connect --ssid hiddenwifi --hidden true --auth wpa2-personal -
 
 ## Enterprise Notes
 
-- PEAP/MSCHAPv2 is supported in the current implementation.
+- 802.1X enterprise Wi-Fi with PEAP/MSCHAPv2 is supported in the current implementation.
+- 802.1X enterprise connectivity was validated against a real FreeRADIUS test environment on CentOS.
+- PEAP/MSCHAPv2 authentication was verified with FreeRADIUS running in debug mode by using `radius -X`.
 - If `--no-prompt false` is used, Windows may wait for certificate confirmation in the Wi-Fi panel.
 - If `--no-prompt true` is used, certificate trust or server name mismatch can cause silent authentication failure.
 - For stable enterprise connection, configure the correct trusted Root CA thumbprint and expected server names when required.
