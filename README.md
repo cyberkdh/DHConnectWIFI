@@ -60,7 +60,7 @@ DHConnectWIFI.exe scan
 Scan a specific SSID:
 
 ```powershell
-DHConnectWIFI.exe scan --ssid dslocalwifi_24
+DHConnectWIFI.exe scan --ssid homwwifi
 ```
 
 Connect to a personal network:
@@ -72,25 +72,25 @@ DHConnectWIFI.exe connect --ssid homewifi --password mywifipassword
 Connect to an enterprise network:
 
 ```powershell
-DHConnectWIFI.exe connect --ssid dslocalwifi_24 --username testuser --password testpassword --domain ""
+DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain ""
 ```
 
 Connect to an enterprise network without certificate prompt after CA trust is configured:
 
 ```powershell
-DHConnectWIFI.exe connect --ssid dslocalwifi_24 --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
 ```
 
 Reconnect by using a stored Windows profile:
 
 ```powershell
-DHConnectWIFI.exe connect-profile --ssid dslocalwifi_24
+DHConnectWIFI.exe connect-profile --ssid homwwifi
 ```
 
 Delete a stored Windows profile:
 
 ```powershell
-DHConnectWIFI.exe delete-profile --ssid dslocalwifi_24
+DHConnectWIFI.exe delete-profile --ssid homwwifi
 ```
 
 Connect to a hidden SSID:

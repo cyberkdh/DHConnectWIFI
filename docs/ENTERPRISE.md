@@ -24,13 +24,13 @@ The validation included:
 ## Basic Command
 
 ```powershell
-DHConnectWIFI.exe connect --ssid dslocalwifi_24 --username testuser --password testpassword --domain ""
+DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain ""
 ```
 
 ## Command with Trusted Root CA
 
 ```powershell
-DHConnectWIFI.exe connect --ssid dslocalwifi_24 --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
 ```
 
 ## Parameters
@@ -67,14 +67,14 @@ DHConnectWIFI.exe connect --ssid dslocalwifi_24 --username testuser --password t
 ## Reconnect with Stored Profile
 
 ```powershell
-DHConnectWIFI.exe connect-profile --ssid dslocalwifi_24
+DHConnectWIFI.exe connect-profile --ssid homwwifi
 ```
 
 ## Refresh a Broken Enterprise Profile
 
 ```powershell
-DHConnectWIFI.exe delete-profile --ssid dslocalwifi_24
-DHConnectWIFI.exe connect --ssid dslocalwifi_24 --username testuser --password testpassword --domain ""
+DHConnectWIFI.exe delete-profile --ssid homwwifi
+DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain ""
 ```
 
 ## Common Failure Patterns

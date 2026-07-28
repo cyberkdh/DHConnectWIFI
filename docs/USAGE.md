@@ -44,13 +44,13 @@ DHConnectWIFI.exe scan
 Scan one SSID:
 
 ```powershell
-DHConnectWIFI.exe scan --ssid dslocalwifi_24
+DHConnectWIFI.exe scan --ssid homwwifi
 ```
 
 Scan one SSID and show BSSID details:
 
 ```powershell
-DHConnectWIFI.exe scan --ssid dslocalwifi_24 --show-bssid true
+DHConnectWIFI.exe scan --ssid homwwifi --show-bssid true
 ```
 
 Notes:
@@ -84,13 +84,13 @@ Supported personal modes in the current implementation:
 Basic enterprise example:
 
 ```powershell
-DHConnectWIFI.exe connect --ssid dslocalwifi_24 --username testuser --password testpassword --domain ""
+DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain ""
 ```
 
 Enterprise example with trusted Root CA thumbprint and no prompt:
 
 ```powershell
-DHConnectWIFI.exe connect --ssid dslocalwifi_24 --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
 ```
 
 Optional enterprise parameters:
@@ -109,13 +109,13 @@ Guidance:
 Reconnect by using an already stored Windows profile:
 
 ```powershell
-DHConnectWIFI.exe connect-profile --ssid dslocalwifi_24
+DHConnectWIFI.exe connect-profile --ssid homwwifi
 ```
 
 Delete a stored Windows profile:
 
 ```powershell
-DHConnectWIFI.exe delete-profile --ssid dslocalwifi_24
+DHConnectWIFI.exe delete-profile --ssid homwwifi
 ```
 
 Notes:

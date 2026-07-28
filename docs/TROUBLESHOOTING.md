@@ -64,7 +64,7 @@ What to check:
 Example:
 
 ```powershell
-DHConnectWIFI.exe connect --ssid dslocalwifi_24 --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
 ```
 
 ## 4. Hidden SSID Security Cannot Be Detected
@@ -92,8 +92,8 @@ What to do:
 Example:
 
 ```powershell
-DHConnectWIFI.exe delete-profile --ssid dslocalwifi_24
-DHConnectWIFI.exe connect --ssid dslocalwifi_24 --username testuser --password testpassword --domain ""
+DHConnectWIFI.exe delete-profile --ssid homwwifi
+DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain ""
 ```
 
 ## 6. Connectable Is Reported as No
@@ -124,17 +124,17 @@ DHConnectWIFI.exe scan
 Scan a specific SSID:
 
 ```powershell
-DHConnectWIFI.exe scan --ssid dslocalwifi_24
+DHConnectWIFI.exe scan --ssid homwwifi
 ```
 
 Scan with BSSID details:
 
 ```powershell
-DHConnectWIFI.exe scan --ssid dslocalwifi_24 --show-bssid true
+DHConnectWIFI.exe scan --ssid homwwifi --show-bssid true
 ```
 
 Reconnect with stored profile:
 
 ```powershell
-DHConnectWIFI.exe connect-profile --ssid dslocalwifi_24
+DHConnectWIFI.exe connect-profile --ssid homwwifi
 ```
