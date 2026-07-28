@@ -1,0 +1,19 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/DHConnectWifi/.vs/DHConnectWIFI
+/DHConnectWifi/Debug
+/DHConnectWifi/DHConnectWIFI/Debug
+/DHConnectWifi/DHConnectWIFI/Release
+/DHConnectWifi/DHConnectWIFI/x64/Debug
+/DHConnectWifi/DHConnectWIFI/x64/Release
+/DHConnectWifi/env
+/DHConnectWifi/Release
+/DHConnectWifi/x64
+/DHConnectWifi/DHConnectWIFI.aps
+/DHConnectWifi/DHConnectWIFI.vcxproj.user
+/output/obj
+/output/x64/Debug
+/output/Win32/Debug
+*.pdb
