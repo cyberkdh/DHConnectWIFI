@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0.2] - 2026-07-29
+
+### Added
+
+- `EAP-TLS` enterprise profile generation flow
+- `--eap-method peap|tls` option on `connect`
+- `--client-cert-thumbprint <sha1hex>` option for selecting a specific EAP-TLS client certificate
+- EAP user XML debug output for enterprise credential application verification
+
+### Validated
+
+- `EAP-TLS` connection against a real FreeRADIUS environment on CentOS
+- direct client certificate selection by `SHA-1 thumbprint`
+- successful connection without Windows certificate chooser after EAP-TLS user XML compatibility adjustment
+
+### Changed
+
+- EAP-TLS user credential XML namespace adjusted for Windows WLAN/EAPHost compatibility
+- Version resource updated to `1.0.0.2`
+
 ## [1.0.0.1] - 2026-07-28
 
 ### Added

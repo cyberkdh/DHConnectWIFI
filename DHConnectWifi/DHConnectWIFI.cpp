@@ -353,6 +353,51 @@ namespace {
 		return L"";
 	}
 
+	std::wstring NormalizeEapMethodValue(const std::wstring& streapmethodvalue) {
+		if(streapmethodvalue.empty() == true) {
+			return L"peap";
+		}
+
+		if(streapmethodvalue == L"peap") {
+			return L"peap";
+		}
+
+		if(streapmethodvalue == L"tls" || streapmethodvalue == L"eap-tls") {
+			return L"tls";
+		}
+
+		return L"";
+	}
+
+	bool IsHexCharacter(wchar_t chvalue) {
+		return (chvalue >= L'0' && chvalue <= L'9')
+			|| (chvalue >= L'a' && chvalue <= L'f')
+			|| (chvalue >= L'A' && chvalue <= L'F');
+	}
+
+	std::wstring NormalizeThumbprintValue(const std::wstring& strthumbprintvalue) {
+		std::wstring strnormalized;
+
+		for(size_t i = 0; i < strthumbprintvalue.size(); ++i) {
+			wchar_t chvalue = strthumbprintvalue[i];
+			if(chvalue == L' ' || chvalue == L'\t' || chvalue == L'\r' || chvalue == L'\n') {
+				continue;
+			}
+
+			if(IsHexCharacter(chvalue) == false) {
+				return L"";
+			}
+
+			strnormalized.push_back(static_cast<wchar_t>(towupper(chvalue)));
+		}
+
+		if(strnormalized.size() != 40) {
+			return L"";
+		}
+
+		return strnormalized;
+	}
+
 	struct HiddenSecurityChoice {
 		std::wstring strauth;
 		std::wstring strcipher;
@@ -471,7 +516,7 @@ namespace {
 			L"</WLANProfile>\n";
 	}
 
-	std::wstring BuildEnterpriseProfileXml(
+	std::wstring BuildEnterprisePeapProfileXml(
 		const std::wstring& strssid,
 		const std::wstring& strauth,
 		const std::wstring& strcipher,
@@ -564,6 +609,94 @@ namespace {
 			L"</WLANProfile>\n";
 	}
 
+	std::wstring BuildEnterpriseTlsProfileXml(
+		const std::wstring& strssid,
+		const std::wstring& strauth,
+		const std::wstring& strcipher,
+		const std::wstring& strservernames,
+		const std::wstring& strtrustedrootca,
+		bool bdisableuserpromptforservervalidation,
+		bool bhidden) {
+		std::wstring strssidxml = XmlEscape(strssid);
+		std::wstring strauthxml = ProfileAuthToXml(strauth);
+		std::wstring strcipherxml = ProfileCipherToXml(strcipher);
+		std::wstring strservernamesxml = XmlEscape(strservernames);
+		std::wstring strservervalidationblock;
+		std::wstring strnonbroadcastxml = BuildNonBroadcastXml(bhidden);
+
+		strservervalidationblock =
+			L"                  <ServerValidation>\n"
+			L"                    <DisableUserPromptForServerValidation>" +
+			std::wstring(bdisableuserpromptforservervalidation ? L"true" : L"false") +
+			L"</DisableUserPromptForServerValidation>\n";
+
+		if(strservernames.empty() == false) {
+			strservervalidationblock +=
+				L"                    <ServerNames>" + strservernamesxml + L"</ServerNames>\n";
+		} else {
+			strservervalidationblock +=
+				L"                    <ServerNames></ServerNames>\n";
+		}
+
+		if(strtrustedrootca.empty() == false) {
+			strservervalidationblock +=
+				L"                    <TrustedRootCA>" + strtrustedrootca + L"</TrustedRootCA>\n";
+		}
+
+		strservervalidationblock +=
+			L"                  </ServerValidation>\n";
+
+		return
+			L"<?xml version=\"1.0\"?>\n"
+			L"<WLANProfile xmlns=\"http://www.microsoft.com/networking/WLAN/profile/v1\">\n"
+			L"  <name>" + strssidxml + L"</name>\n"
+			L"  <SSIDConfig>\n"
+			L"    <SSID>\n"
+			L"      <name>" + strssidxml + L"</name>\n"
+			L"    </SSID>\n"
+			+ strnonbroadcastxml +
+			L"  </SSIDConfig>\n"
+			L"  <connectionType>ESS</connectionType>\n"
+			L"  <connectionMode>manual</connectionMode>\n"
+			L"  <MSM>\n"
+			L"    <security>\n"
+			L"      <authEncryption>\n"
+			L"        <authentication>" + strauthxml + L"</authentication>\n"
+			L"        <encryption>" + strcipherxml + L"</encryption>\n"
+			L"        <useOneX>true</useOneX>\n"
+			L"      </authEncryption>\n"
+			L"      <OneX xmlns=\"http://www.microsoft.com/networking/OneX/v1\">\n"
+			L"        <authMode>user</authMode>\n"
+			L"        <EAPConfig>\n"
+			L"          <EapHostConfig xmlns=\"http://www.microsoft.com/provisioning/EapHostConfig\">\n"
+			L"            <EapMethod>\n"
+			L"              <Type xmlns=\"http://www.microsoft.com/provisioning/EapCommon\">13</Type>\n"
+			L"              <VendorId xmlns=\"http://www.microsoft.com/provisioning/EapCommon\">0</VendorId>\n"
+			L"              <VendorType xmlns=\"http://www.microsoft.com/provisioning/EapCommon\">0</VendorType>\n"
+			L"              <AuthorId xmlns=\"http://www.microsoft.com/provisioning/EapCommon\">0</AuthorId>\n"
+			L"            </EapMethod>\n"
+			L"            <Config xmlns=\"http://www.microsoft.com/provisioning/EapHostConfig\">\n"
+			L"              <Eap xmlns=\"http://www.microsoft.com/provisioning/BaseEapConnectionPropertiesV1\">\n"
+			L"                <Type>13</Type>\n"
+			L"                <EapType xmlns=\"http://www.microsoft.com/provisioning/EapTlsConnectionPropertiesV1\">\n"
+			L"                  <CredentialsSource>\n"
+			L"                    <CertificateStore>\n"
+			L"                      <SimpleCertSelection>true</SimpleCertSelection>\n"
+			L"                    </CertificateStore>\n"
+			L"                  </CredentialsSource>\n"
+			+ strservervalidationblock +
+			L"                  <DifferentUsername>false</DifferentUsername>\n"
+			L"                </EapType>\n"
+			L"              </Eap>\n"
+			L"            </Config>\n"
+			L"          </EapHostConfig>\n"
+			L"        </EAPConfig>\n"
+			L"      </OneX>\n"
+			L"    </security>\n"
+			L"  </MSM>\n"
+			L"</WLANProfile>\n";
+	}
+
 	std::wstring BuildPeapUserCredentialXml(
 		const std::wstring& strusername,
 		const std::wstring& strpassword,
@@ -604,6 +737,39 @@ namespace {
 			L"</EapHostUserCredentials>\n";
 	}
 
+	std::wstring BuildTlsUserCertificateCredentialXml(const std::wstring& strclientcertthumbprint) {
+		return
+			L"<?xml version=\"1.0\"?>\n"
+			L"<EapHostUserCredentials xmlns=\"http://www.microsoft.com/provisioning/EapHostUserCredentials\" "
+			L"xmlns:eapCommon=\"http://www.microsoft.com/provisioning/EapCommon\" "
+			L"xmlns:baseEap=\"http://www.microsoft.com/provisioning/BaseEapMethodUserCredentials\">\n"
+			L"  <EapMethod>\n"
+			L"    <eapCommon:Type>13</eapCommon:Type>\n"
+			L"    <eapCommon:AuthorId>0</eapCommon:AuthorId>\n"
+			L"  </EapMethod>\n"
+			L"  <Credentials xmlns:eapUser=\"http://www.microsoft.com/provisioning/EapUserPropertiesV1\" "
+			L"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+			L"xmlns:baseEap=\"http://www.microsoft.com/provisioning/BaseEapUserPropertiesV1\" "
+			L"xmlns:eapTls=\"http://www.microsoft.com/provisioning/EapTlsUserPropertiesV1\">\n"
+			L"    <baseEap:Eap>\n"
+			L"      <baseEap:Type>13</baseEap:Type>\n"
+			L"      <eapTls:EapType>\n"
+			L"        <eapTls:UserCert>" + strclientcertthumbprint + L"</eapTls:UserCert>\n"
+			L"      </eapTls:EapType>\n"
+			L"    </baseEap:Eap>\n"
+			L"  </Credentials>\n"
+			L"</EapHostUserCredentials>\n";
+	}
+
+	void PrintDebugXmlBlock(const wchar_t* sztitle, const std::wstring& strxml) {
+		std::wcout << L"------- " << sztitle << L" BEGIN -------\n";
+		std::wcout << strxml;
+		if(strxml.empty() == false && strxml[strxml.size() - 1] != L'\n') {
+			std::wcout << L"\n";
+		}
+		std::wcout << L"------- " << sztitle << L" END   -------\n";
+	}
+
 	void PrintUsage() {
 		std::wcout << L"DHConnectWIFI - Windows Native Wifi console helper\n";
 		std::wcout << L"\n";
@@ -615,7 +781,8 @@ namespace {
 		std::wcout << L"  DHConnectWIFI delete-profile --ssid <name>\n";
 		std::wcout << L"  DHConnectWIFI connect-profile --ssid <name>\n";
 		std::wcout << L"  DHConnectWIFI connect --ssid <name> [--username <id>] [--password <pw>] [--domain <name>]\n";
-		std::wcout << L"                        [--server-names <fqdn;fqdn>] [--trusted-root-ca <sha1hex>] [--no-prompt true|false]\n";
+		std::wcout << L"                        [--eap-method peap|tls] [--server-names <fqdn;fqdn>] [--trusted-root-ca <sha1hex>] [--no-prompt true|false]\n";
+		std::wcout << L"                        [--client-cert-thumbprint <sha1hex>]\n";
 		std::wcout << L"                        [--hidden true|false] [--auth <mode>] [--cipher <mode>]\n";
 		std::wcout << L"\n";
 		std::wcout << L"Arguments:\n";
@@ -626,6 +793,13 @@ namespace {
 		std::wcout << L"      802.1X user name for PEAP/MSCHAPv2.\n";
 		std::wcout << L"  --show-bssid true|false\n";
 		std::wcout << L"      Optional scan detail flag. false by default because BSSID lookup can be slow.\n";
+		std::wcout << L"  --eap-method peap|tls\n";
+		std::wcout << L"      Optional 802.1X EAP method selection. peap by default.\n";
+		std::wcout << L"      peap : PEAP/MSCHAPv2 with --username/--password.\n";
+		std::wcout << L"      tls  : EAP-TLS with client certificate already installed in Windows certificate store.\n";
+		std::wcout << L"  --client-cert-thumbprint <sha1hex>\n";
+		std::wcout << L"      Optional EAP-TLS client certificate SHA1 thumbprint without spaces.\n";
+		std::wcout << L"      If provided, DHConnectWIFI requests that exact client certificate through EAP user data.\n";
 		std::wcout << L"  --hidden true|false\n";
 		std::wcout << L"      true when the SSID is hidden(non-broadcast). This adds nonBroadcast=true to profile XML.\n";
 		std::wcout << L"  --auth <mode>\n";
@@ -662,16 +836,20 @@ namespace {
 		std::wcout << L"\n";
 		std::wcout << L"Examples:\n";
 		std::wcout << L"  DHConnectWIFI scan\n";
-		std::wcout << L"  DHConnectWIFI scan --ssid dslocalwifi_24\n";
-		std::wcout << L"  DHConnectWIFI scan --ssid dslocalwifi_24 --show-bssid true\n";
-		std::wcout << L"  DHConnectWIFI delete-profile --ssid dslocalwifi_24\n";
-		std::wcout << L"  DHConnectWIFI connect-profile --ssid dslocalwifi_24\n";
+		std::wcout << L"  DHConnectWIFI scan --ssid homwwifi\n";
+		std::wcout << L"  DHConnectWIFI scan --ssid homwwifi --show-bssid true\n";
+		std::wcout << L"  DHConnectWIFI delete-profile --ssid homwwifi\n";
+		std::wcout << L"  DHConnectWIFI connect-profile --ssid homwwifi\n";
 		std::wcout << L"  DHConnectWIFI connect --ssid guestwifi\n";
 		std::wcout << L"  DHConnectWIFI connect --ssid homewifi --password mywifipassword\n";
 		std::wcout << L"  DHConnectWIFI connect --ssid hiddenwifi --hidden true --auth wpa2-personal --cipher aes --password secret123\n";
-		std::wcout << L"  DHConnectWIFI connect --ssid dslocalwifi_24 --username testuser --password testpassword --domain \"\"\n";
-		std::wcout << L"  DHConnectWIFI connect --ssid dslocalwifi_24 --username testuser --password testpassword --domain \"\" \\\n";
+		std::wcout << L"  DHConnectWIFI connect --ssid homwwifi --eap-method peap --username testuser --password testpassword --domain \"\"\n";
+		std::wcout << L"  DHConnectWIFI connect --ssid homwwifi --eap-method peap --username testuser --password testpassword --domain \"\" \\\n";
 		std::wcout << L"      --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true\n";
+		std::wcout << L"  DHConnectWIFI connect --ssid homwwifi --eap-method tls --auth wpa2-enterprise --cipher aes \\\n";
+		std::wcout << L"      --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true\n";
+		std::wcout << L"  DHConnectWIFI connect --ssid homwwifi --eap-method tls --auth wpa2-enterprise --cipher aes \\\n";
+		std::wcout << L"      --client-cert-thumbprint 0123456789ABCDEF0123456789ABCDEF01234567 --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D\n";
 		std::wcout << L"\n";
 		std::wcout << L"Certificate prompt guide:\n";
 		std::wcout << L"  1. If connection stays at [STATE] authenticating and --no-prompt is false,\n";
@@ -679,7 +857,8 @@ namespace {
 		std::wcout << L"  2. If prompt is shown, review certificate details and trust only expected server/CA.\n";
 		std::wcout << L"  3. If --no-prompt true is used, server trust or name mismatch can cause silent failure.\n";
 		std::wcout << L"  4. connect-profile uses only the stored Windows profile. It does not rewrite password or 802.1X credentials.\n";
-		std::wcout << L"  5. For hidden SSID not visible in scan, use --hidden true.\n";
+		std::wcout << L"  5. EAP-TLS requires a client certificate with private key already installed in Windows certificate store.\n";
+		std::wcout << L"  6. For hidden SSID not visible in scan, use --hidden true.\n";
 		std::wcout << L"     You can still provide --auth and --cipher, or choose security type in console fallback.\n";
 		std::wcout << L"\n";
 	}
@@ -1252,7 +1431,7 @@ namespace {
 		return bfoundprofile;
 	}
 
-	bool SetPeapUserCredential(
+	bool SetProfileEapXmlUserData(
 		HANDLE hwlan,
 		const GUID& guidinterface,
 		const std::wstring& strprofilename,
@@ -1270,6 +1449,20 @@ namespace {
 		}
 
 		return true;
+	}
+
+	std::wstring DetectEnterpriseEapMethodFromProfileXml(const std::wstring& strprofilexml) {
+		if(strprofilexml.find(L"Type>13</Type>") != std::wstring::npos
+			|| strprofilexml.find(L"EapTlsConnectionPropertiesV1") != std::wstring::npos) {
+			return L"tls";
+		}
+
+		if(strprofilexml.find(L"Type>25</Type>") != std::wstring::npos
+			|| strprofilexml.find(L"MsPeapConnectionPropertiesV1") != std::wstring::npos) {
+			return L"peap";
+		}
+
+		return L"unknown";
 	}
 
 	bool QueryCurrentConnection(
@@ -1303,7 +1496,8 @@ namespace {
 		const GUID& guidinterface,
 		const std::wstring& strtargetssid,
 		bool benterpriseauth,
-		bool bdisableuserpromptforservervalidation) {
+		bool bdisableuserpromptforservervalidation,
+		const std::wstring& streapmethod) {
 		InterlockedExchange(&g_nconnectattemptfailed, 0);
 		g_dwlastreasoncode = 0;
 		int nauthenticatingcount = 0;
@@ -1355,6 +1549,10 @@ namespace {
 						std::wcout << L"        If server trust/name validation does not match, connection can fail silently.\n";
 						std::wcout << L"        Re-run with --no-prompt false or configure --trusted-root-ca and --server-names correctly.\n";
 					}
+					if(streapmethod == L"tls") {
+						std::wcout << L"        EAP-TLS also requires a client certificate with private key in the Windows certificate store.\n";
+						std::wcout << L"        Current implementation uses SimpleCertSelection=true for automatic certificate selection.\n";
+					}
 					bpromptguidanceprinted = true;
 				}
 			} else {
@@ -1369,7 +1567,12 @@ namespace {
 			return 1;
 		}
 
-		std::wcout << L"       If 802.1X credential is not configured yet, connection failure can be expected.\n";
+		if(streapmethod == L"tls") {
+			std::wcout << L"       If a client certificate with private key is not available in the Windows certificate store, connection failure can be expected.\n";
+			std::wcout << L"       Current implementation relies on automatic certificate selection(SimpleCertSelection=true).\n";
+		} else {
+			std::wcout << L"       If 802.1X credential is not configured yet, connection failure can be expected.\n";
+		}
 		if(bdisableuserpromptforservervalidation == false) {
 			std::wcout << L"       If the state stayed at authenticating, check the MS Wi-Fi panel for a certificate approval prompt.\n";
 			std::wcout << L"       Accept the prompt only when the certificate issuer/server matches your expected enterprise network.\n";
@@ -1391,13 +1594,17 @@ namespace {
 		bool bdisableuserpromptforservervalidation,
 		bool bhidden,
 		const std::wstring& strauthoverride,
-		const std::wstring& strcipheroverride) {
+		const std::wstring& strcipheroverride,
+		const std::wstring& streapmethodvalue,
+		const std::wstring& strclientcertthumbprintvalue) {
 		GUID guidmatchedinterface = { 0 };
 		std::wstring strmatchedinterface;
 		std::wstring strmatchedauth;
 		std::wstring strmatchedcipher;
 		std::wstring strprofilexml;
 		std::wstring streapxmluserdata;
+		std::wstring strnormalizedeapmethod = NormalizeEapMethodValue(streapmethodvalue);
+		std::wstring strnormalizedclientcertthumbprint = NormalizeThumbprintValue(strclientcertthumbprintvalue);
 		std::wstring strnormalizedauthoverride = NormalizeAuthOverride(strauthoverride);
 		std::wstring strnormalizedcipheroverride = NormalizeCipherOverride(strcipheroverride);
 		DWORD dwreasoncode = 0;
@@ -1408,6 +1615,18 @@ namespace {
 		if(strssid.empty() == true) {
 			std::wcout << L"[ERROR] connect requires target SSID.\n";
 			std::wcout << L"        example: DHConnectWIFI connect --ssid companywifi\n";
+			return 1;
+		}
+
+		if(streapmethodvalue.empty() == false && strnormalizedeapmethod.empty() == true) {
+			std::wcout << L"[ERROR] Unsupported --eap-method value: " << streapmethodvalue << L"\n";
+			std::wcout << L"        Supported now: peap, tls\n";
+			return 1;
+		}
+
+		if(strclientcertthumbprintvalue.empty() == false && strnormalizedclientcertthumbprint.empty() == true) {
+			std::wcout << L"[ERROR] Unsupported --client-cert-thumbprint value.\n";
+			std::wcout << L"        Use SHA1 hex without spaces. example: 0123456789ABCDEF0123456789ABCDEF01234567\n";
 			return 1;
 		}
 
@@ -1466,18 +1685,36 @@ namespace {
 		std::wcout << L"  Auth      : " << strmatchedauth << L"\n";
 		std::wcout << L"  Cipher    : " << strmatchedcipher << L"\n";
 		std::wcout << L"  Hidden    : " << (bhidden ? L"true" : L"false") << L"\n";
+		if(IsEnterpriseAuth(strmatchedauth) == true) {
+			std::wcout << L"  EAPMethod : " << strnormalizedeapmethod << L"\n";
+			if(strnormalizedclientcertthumbprint.empty() == false) {
+				std::wcout << L"  ClientCert: " << strnormalizedclientcertthumbprint << L"\n";
+			}
+		}
 		std::wcout << L"\n";
 		benterpriseauth = IsEnterpriseAuth(strmatchedauth);
 		if(benterpriseauth == true) {
-			strprofilexml = BuildEnterpriseProfileXml(
-				strssid,
-				strmatchedauth,
-				strmatchedcipher,
-				strservernames,
-				strtrustedrootca,
-				bdisableuserpromptforservervalidation,
-				bhidden);
-			std::wcout << L"[INFO] 802.1X WLAN profile XML skeleton prepared.\n";
+			if(strnormalizedeapmethod == L"tls") {
+				strprofilexml = BuildEnterpriseTlsProfileXml(
+					strssid,
+					strmatchedauth,
+					strmatchedcipher,
+					strservernames,
+					strtrustedrootca,
+					bdisableuserpromptforservervalidation,
+					bhidden);
+				std::wcout << L"[INFO] 802.1X WLAN profile XML skeleton prepared for EAP-TLS.\n";
+			} else {
+				strprofilexml = BuildEnterprisePeapProfileXml(
+					strssid,
+					strmatchedauth,
+					strmatchedcipher,
+					strservernames,
+					strtrustedrootca,
+					bdisableuserpromptforservervalidation,
+					bhidden);
+				std::wcout << L"[INFO] 802.1X WLAN profile XML skeleton prepared for PEAP/MSCHAPv2.\n";
+			}
 		} else if(IsPersonalAuth(strmatchedauth) == true) {
 			if(strpassword.empty() == true) {
 				std::wcout << L"[ERROR] Personal Wi-Fi requires --password.\n";
@@ -1524,12 +1761,14 @@ namespace {
 			std::wcout << L"  NoPrompt   : " << (bdisableuserpromptforservervalidation ? L"true" : L"false") << L"\n";
 		}
 
-		if(benterpriseauth == true && (strusername.empty() == false || strpassword.empty() == false)) {
+		if(benterpriseauth == true && strnormalizedeapmethod == L"peap"
+			&& (strusername.empty() == false || strpassword.empty() == false)) {
 			if(strusername.empty() == true || strpassword.empty() == true) {
 				std::wcout << L"[WARNING] username/password must both be provided for PEAP credential apply.\n";
 			} else {
 				streapxmluserdata = BuildPeapUserCredentialXml(strusername, strpassword, strdomain);
-				if(SetPeapUserCredential(hwlan, guidmatchedinterface, strssid, streapxmluserdata) == true) {
+				PrintDebugXmlBlock(L"EAP USER XML", streapxmluserdata);
+				if(SetProfileEapXmlUserData(hwlan, guidmatchedinterface, strssid, streapxmluserdata) == true) {
 					std::wcout << L"[INFO] PEAP user credential XML applied to profile.\n";
 					std::wcout << L"  Username   : " << strusername << L"\n";
 					if(strdomain.empty() == false) {
@@ -1539,8 +1778,28 @@ namespace {
 					std::wcout << L"[WARNING] PEAP credential apply failed. Connection may stay at authenticating.\n";
 				}
 			}
-		} else if(benterpriseauth == true) {
+		} else if(benterpriseauth == true && strnormalizedeapmethod == L"peap") {
 			std::wcout << L"[INFO] No PEAP credential provided. Profile only mode will be tested.\n";
+		} else if(benterpriseauth == true) {
+			if(strnormalizedclientcertthumbprint.empty() == false) {
+				streapxmluserdata = BuildTlsUserCertificateCredentialXml(strnormalizedclientcertthumbprint);
+				PrintDebugXmlBlock(L"EAP USER XML", streapxmluserdata);
+				if(SetProfileEapXmlUserData(hwlan, guidmatchedinterface, strssid, streapxmluserdata) == true) {
+					std::wcout << L"[INFO] EAP-TLS client certificate thumbprint applied to profile.\n";
+					std::wcout << L"  Thumbprint : " << strnormalizedclientcertthumbprint << L"\n";
+				} else {
+					std::wcout << L"[WARNING] EAP-TLS client certificate thumbprint apply failed. Windows may fall back to certificate chooser.\n";
+				}
+			}
+			if(strusername.empty() == false || strpassword.empty() == false || strdomain.empty() == false) {
+				std::wcout << L"[INFO] --username/--password/--domain are ignored for EAP-TLS.\n";
+			}
+			if(strnormalizedclientcertthumbprint.empty() == false) {
+				std::wcout << L"[INFO] EAP-TLS will request the specified client certificate from Windows certificate store.\n";
+			} else {
+				std::wcout << L"[INFO] EAP-TLS will rely on a client certificate already installed in the Windows certificate store.\n";
+				std::wcout << L"       Current profile uses automatic certificate selection(SimpleCertSelection=true).\n";
+			}
 		} else if(IsPersonalAuth(strmatchedauth) == true) {
 			std::wcout << L"[INFO] Personal Wi-Fi password embedded into profile XML.\n";
 		} else {
@@ -1557,7 +1816,8 @@ namespace {
 			guidmatchedinterface,
 			strssid,
 			benterpriseauth,
-			bdisableuserpromptforservervalidation);
+			bdisableuserpromptforservervalidation,
+			strnormalizedeapmethod);
 	}
 
 	int CommandDeleteProfile(HANDLE hwlan, const std::wstring& strssid) {
@@ -1641,7 +1901,12 @@ namespace {
 		}
 
 		std::wcout << L"[INFO] WlanConnect requested with stored profile mode.\n";
-		return PollConnectState(hwlan, guidmatchedinterface, strssid, benterpriseauth, false);
+		std::wstring streapmethod = DetectEnterpriseEapMethodFromProfileXml(strprofilexml);
+		if(benterpriseauth == true) {
+			std::wcout << L"  EAPMethod  : " << streapmethod << L"\n";
+		}
+
+		return PollConnectState(hwlan, guidmatchedinterface, strssid, benterpriseauth, false, streapmethod);
 	}
 
 	void PrintMenu() {
@@ -1680,7 +1945,7 @@ namespace {
 			case 3:
 				std::wcout << L"SSID> ";
 				std::getline(std::wcin, strssid);
-				CommandConnect(hwlan, strssid, L"", L"", L"", L"", L"", false, false, L"", L"");
+				CommandConnect(hwlan, strssid, L"", L"", L"", L"", L"", false, false, L"", L"", L"", L"");
 				break;
 			case 4:
 				return 0;
@@ -1735,7 +2000,9 @@ int wmain(int argc, wchar_t* argv[]) {
 			GetArgBoolValue(args, L"--no-prompt", false),
 			GetArgBoolValue(args, L"--hidden", false),
 			GetArgValue(args, L"--auth"),
-			GetArgValue(args, L"--cipher"));
+			GetArgValue(args, L"--cipher"),
+			GetArgValue(args, L"--eap-method"),
+			GetArgValue(args, L"--client-cert-thumbprint"));
 	} else if(args[0] == L"menu") {
 		nresult = RunInteractiveMenu(hwlan);
 	} else {

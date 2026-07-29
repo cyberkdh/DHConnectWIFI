@@ -23,7 +23,8 @@ DHConnectWIFI scan [--ssid <name>] [--show-bssid true|false]
 DHConnectWIFI delete-profile --ssid <name>
 DHConnectWIFI connect-profile --ssid <name>
 DHConnectWIFI connect --ssid <name> [--username <id>] [--password <pw>] [--domain <name>]
-                      [--server-names <fqdn;fqdn>] [--trusted-root-ca <sha1hex>] [--no-prompt true|false]
+                      [--eap-method peap|tls] [--server-names <fqdn;fqdn>] [--trusted-root-ca <sha1hex>] [--no-prompt true|false]
+                      [--client-cert-thumbprint <sha1hex>]
                       [--hidden true|false] [--auth <mode>] [--cipher <mode>]
 ```
 
@@ -79,30 +80,48 @@ Supported personal modes in the current implementation:
 
 ## 3. Connect to 802.1X Enterprise Wi-Fi
 
-802.1X enterprise connection is designed around PEAP/MSCHAPv2 in the current implementation.
+802.1X enterprise connection supports both PEAP/MSCHAPv2 and EAP-TLS in the current implementation.
 
-Basic enterprise example:
-
-```powershell
-DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain ""
-```
-
-Enterprise example with trusted Root CA thumbprint and no prompt:
+### 3.1 PEAP/MSCHAPv2
 
 ```powershell
-DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+DHConnectWIFI.exe connect --ssid homwwifi --eap-method peap --username testuser --password testpassword --domain ""
 ```
 
-Optional enterprise parameters:
+PEAP example with trusted Root CA thumbprint and no prompt:
 
+```powershell
+DHConnectWIFI.exe connect --ssid homwwifi --eap-method peap --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+```
+
+### 3.2 EAP-TLS
+
+Basic EAP-TLS example:
+
+```powershell
+DHConnectWIFI.exe connect --ssid homwwifi --eap-method tls --auth wpa2-enterprise --cipher aes --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+```
+
+EAP-TLS example with a specific client certificate thumbprint:
+
+```powershell
+DHConnectWIFI.exe connect --ssid dslocalwifi_24 --eap-method tls --auth wpa2-enterprise --cipher aes --client-cert-thumbprint 76D216AAD8D8D93B4C7F6F17DFFB12DFBA703524 --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+```
+
+Enterprise parameters:
+
+- `--eap-method peap|tls`
 - `--server-names <fqdn;fqdn>`
 - `--trusted-root-ca <sha1hex>`
+- `--client-cert-thumbprint <sha1hex>`
 - `--no-prompt true|false`
 
 Guidance:
 
 - If the connection stays at `authenticating`, Windows may be waiting for certificate approval in the Wi-Fi panel.
 - If `--no-prompt true` is used, trust mismatch may fail silently.
+- For EAP-TLS, the client certificate must already exist in the Windows certificate store and include a private key.
+- If `--client-cert-thumbprint` is used, the value must be a SHA-1 thumbprint in hex format.
 
 ## 4. Stored Profile Workflows
 
@@ -169,17 +188,19 @@ The application registers WLAN notifications and can print failure details such 
 Examples of common situations:
 
 - Wrong password on personal Wi-Fi
-- Enterprise authentication failure
+- PEAP enterprise authentication failure
+- EAP-TLS client certificate selection or validation failure
 - Dynamic key exchange timeout
 - Certificate trust mismatch
 
 General troubleshooting steps:
 
 1. Run `scan` first and confirm the target SSID and security mode.
-2. For enterprise Wi-Fi, verify the Root CA trust and server name settings.
-3. For hidden SSID, retry with `--hidden true`.
-4. If hidden SSID detection is incomplete, use console fallback or provide `--auth` and `--cipher`.
-5. If a stored profile may be stale, delete it and reconnect with a fresh profile.
+2. For PEAP enterprise Wi-Fi, verify user name, password, Root CA trust, and server name settings.
+3. For EAP-TLS, verify client certificate installation, private key presence, and thumbprint value.
+4. For hidden SSID, retry with `--hidden true`.
+5. If hidden SSID detection is incomplete, use console fallback or provide `--auth` and `--cipher`.
+6. If a stored profile may be stale, delete it and reconnect with a fresh profile.
 
 ## 7. Current Validation Status
 
@@ -190,6 +211,7 @@ Validated:
 - WPA2/WPA3-Personal
 - WPA-Enterprise with AES-CCMP
 - WPA2/WPA3-Enterprise with AES-CCMP
+- EAP-TLS with direct client certificate thumbprint selection
 - Hidden SSID workflow
 
 Not currently validated in the available Windows OS and driver environment:

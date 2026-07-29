@@ -2,7 +2,7 @@
 
 DHConnectWIFI is a Windows console helper for connecting to Wi-Fi networks by using the Native Wifi API.
 
-It supports common Wi-Fi workflows such as scanning available networks, connecting with a generated profile, reconnecting with a stored Windows profile, deleting a profile, and handling hidden SSID scenarios.
+It supports common Wi-Fi workflows such as scanning available networks, connecting with a generated profile, reconnecting with a stored Windows profile, deleting a profile, handling hidden SSID scenarios, and working with both PEAP/MSCHAPv2 and EAP-TLS enterprise authentication.
 
 ## Features
 
@@ -10,7 +10,9 @@ It supports common Wi-Fi workflows such as scanning available networks, connecti
 - Show optional BSSID information
 - Connect to open networks
 - Connect to personal networks such as WPA-PSK and WPA2-Personal
-- Connect to 802.1X enterprise networks such as WPA-Enterprise and WPA2-Enterprise by using PEAP/MSCHAPv2
+- Connect to 802.1X enterprise networks by using PEAP/MSCHAPv2
+- Connect to 802.1X enterprise networks by using EAP-TLS
+- Select a specific EAP-TLS client certificate by SHA-1 thumbprint
 - Reconnect by using an existing Windows WLAN profile
 - Delete an existing Windows WLAN profile
 - Handle hidden SSID connections with direct options or console fallback selection
@@ -25,7 +27,8 @@ DHConnectWIFI scan [--ssid <name>] [--show-bssid true|false]
 DHConnectWIFI delete-profile --ssid <name>
 DHConnectWIFI connect-profile --ssid <name>
 DHConnectWIFI connect --ssid <name> [--username <id>] [--password <pw>] [--domain <name>]
-                      [--server-names <fqdn;fqdn>] [--trusted-root-ca <sha1hex>] [--no-prompt true|false]
+                      [--eap-method peap|tls] [--server-names <fqdn;fqdn>] [--trusted-root-ca <sha1hex>] [--no-prompt true|false]
+                      [--client-cert-thumbprint <sha1hex>]
                       [--hidden true|false] [--auth <mode>] [--cipher <mode>]
 ```
 
@@ -49,6 +52,12 @@ Build output location:
 output\x64\Release\DHConnectWIFI.exe
 ```
 
+Version:
+
+```text
+1.0.0.2
+```
+
 ## Quick Start
 
 Scan networks:
@@ -69,16 +78,28 @@ Connect to a personal network:
 DHConnectWIFI.exe connect --ssid homewifi --password mywifipassword
 ```
 
-Connect to an enterprise network:
+Connect to an enterprise network with PEAP/MSCHAPv2:
 
 ```powershell
-DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain ""
+DHConnectWIFI.exe connect --ssid homwwifi --eap-method peap --username testuser --password testpassword --domain ""
 ```
 
-Connect to an enterprise network without certificate prompt after CA trust is configured:
+Connect to an enterprise network with PEAP/MSCHAPv2 and trusted Root CA:
 
 ```powershell
-DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+DHConnectWIFI.exe connect --ssid homwwifi --eap-method peap --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+```
+
+Connect to an enterprise network with EAP-TLS:
+
+```powershell
+DHConnectWIFI.exe connect --ssid homwwifi --eap-method tls --auth wpa2-enterprise --cipher aes --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+```
+
+Connect to an enterprise network with EAP-TLS and a specific client certificate:
+
+```powershell
+DHConnectWIFI.exe connect --ssid dslocalwifi_24 --eap-method tls --auth wpa2-enterprise --cipher aes --client-cert-thumbprint 76D216AAD8D8D93B4C7F6F17DFFB12DFBA703524 --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
 ```
 
 Reconnect by using a stored Windows profile:
@@ -108,11 +129,15 @@ DHConnectWIFI.exe connect --ssid hiddenwifi --hidden true --auth wpa2-personal -
 ## Enterprise Notes
 
 - 802.1X enterprise Wi-Fi with PEAP/MSCHAPv2 is supported in the current implementation.
+- 802.1X enterprise Wi-Fi with EAP-TLS is supported in the current implementation.
 - 802.1X enterprise connectivity was validated against a real FreeRADIUS test environment on CentOS.
 - PEAP/MSCHAPv2 authentication was verified with FreeRADIUS running in debug mode by using `radius -X`.
+- EAP-TLS authentication was also verified with a client certificate installed in the Windows certificate store.
+- A specific EAP-TLS client certificate can be requested by `--client-cert-thumbprint`.
 - If `--no-prompt false` is used, Windows may wait for certificate confirmation in the Wi-Fi panel.
 - If `--no-prompt true` is used, certificate trust or server name mismatch can cause silent authentication failure.
 - For stable enterprise connection, configure the correct trusted Root CA thumbprint and expected server names when required.
+- For EAP-TLS, the client certificate must exist in the Windows certificate store and include a private key.
 
 ## Hidden SSID Notes
 
@@ -129,6 +154,8 @@ DHConnectWIFI.exe connect --ssid hiddenwifi --hidden true --auth wpa2-personal -
 ## Documentation
 
 - Detailed usage guide: [docs/USAGE.md](docs/USAGE.md)
+- Enterprise guide: [docs/ENTERPRISE.md](docs/ENTERPRISE.md)
+- Troubleshooting guide: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## License
 

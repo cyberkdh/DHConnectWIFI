@@ -52,22 +52,51 @@ Possible causes:
 - certificate trust mismatch
 - server name mismatch
 - missing PEAP user credential
+- missing EAP-TLS client certificate
 - Windows waiting for certificate approval
 
 What to check:
 
-1. Verify `--username`, `--password`, and `--domain`.
+1. For PEAP, verify `--username`, `--password`, and `--domain`.
 2. If needed, verify `--trusted-root-ca`.
 3. If server name validation is required, verify `--server-names`.
-4. If `--no-prompt false` is used, open the Windows Wi-Fi panel and check for certificate approval.
+4. For EAP-TLS, verify that the client certificate exists in the Windows certificate store and includes a private key.
+5. If using direct certificate selection, verify `--client-cert-thumbprint`.
+6. If `--no-prompt false` is used, open the Windows Wi-Fi panel and check for certificate approval.
 
-Example:
+PEAP example:
 
 ```powershell
-DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+DHConnectWIFI.exe connect --ssid homwwifi --eap-method peap --username testuser --password testpassword --domain "" --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
 ```
 
-## 4. Hidden SSID Security Cannot Be Detected
+EAP-TLS example:
+
+```powershell
+DHConnectWIFI.exe connect --ssid dslocalwifi_24 --eap-method tls --auth wpa2-enterprise --cipher aes --client-cert-thumbprint 76D216AAD8D8D93B4C7F6F17DFFB12DFBA703524 --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+```
+
+## 4. EAP User Data Apply Failure
+
+Example message:
+
+```text
+[ERROR] WlanSetProfileEapXmlUserData failed. code=1206
+```
+
+What it usually means:
+
+- Windows rejected the EAP user XML for the target profile
+- the profile or EAP user XML is not in the expected schema form
+
+What to check:
+
+1. Confirm that the profile is really 802.1X.
+2. Recreate the profile with a fresh `connect` command.
+3. If you are using EAP-TLS, confirm that `--client-cert-thumbprint` is a valid SHA-1 thumbprint.
+4. Check the printed `EAP USER XML` debug block in the console output.
+
+## 5. Hidden SSID Security Cannot Be Detected
 
 If the tool cannot detect the hidden SSID security mode during scan, it can fall back to console security selection.
 
@@ -77,7 +106,7 @@ You can also provide the security mode directly:
 DHConnectWIFI.exe connect --ssid hiddenwifi --hidden true --auth wpa2-personal --cipher aes --password secret123
 ```
 
-## 5. Stored Profile Is Old or Broken
+## 6. Stored Profile Is Old or Broken
 
 Symptoms:
 
@@ -93,10 +122,10 @@ Example:
 
 ```powershell
 DHConnectWIFI.exe delete-profile --ssid homwwifi
-DHConnectWIFI.exe connect --ssid homwwifi --username testuser --password testpassword --domain ""
+DHConnectWIFI.exe connect --ssid homwwifi --eap-method peap --username testuser --password testpassword --domain ""
 ```
 
-## 6. Connectable Is Reported as No
+## 7. Connectable Is Reported as No
 
 If scan output shows:
 
@@ -113,7 +142,7 @@ This was specifically observed for:
 
 In this situation, code changes alone may not be enough.
 
-## 7. Useful Diagnostic Commands
+## 8. Useful Diagnostic Commands
 
 Scan:
 
