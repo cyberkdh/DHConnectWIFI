@@ -105,7 +105,7 @@ DHConnectWIFI.exe connect --ssid homwwifi --eap-method tls --auth wpa2-enterpris
 EAP-TLS example with a specific client certificate thumbprint:
 
 ```powershell
-DHConnectWIFI.exe connect --ssid dslocalwifi_24 --eap-method tls --auth wpa2-enterprise --cipher aes --client-cert-thumbprint 76D216AAD8D8D93B4C7F6F17DFFB12DFBA703524 --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
+DHConnectWIFI.exe connect --ssid homwwifi --eap-method tls --auth wpa2-enterprise --cipher aes --client-cert-thumbprint 76D216AAD8D8D93B4C7F6F17DFFB12DFBA703524 --trusted-root-ca 727A30D0E344AA7C41141791107BD290C64B3C6D --no-prompt true
 ```
 
 Enterprise parameters:
