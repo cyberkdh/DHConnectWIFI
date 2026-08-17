@@ -15,7 +15,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ "Win32", "x64" ]
+        include:
+          - artifact_name: "DHConnectWIFI-Win32"
+            msbuild_platform: "x86"
+            output_platform: "Win32"
+            package_platform: "Win32"
+          - artifact_name: "DHConnectWIFI-x64"
+            msbuild_platform: "x64"
+            output_platform: "x64"
+            package_platform: "x64"
 
     steps:
       - name: Checkout
@@ -25,12 +33,12 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Build solution (Release)
-        run: msbuild DHConnectWifi\DHConnectWIFI.sln /restore /t:Build /p:Configuration=Release /p:Platform=${{ matrix.platform }} /v:minimal
+        run: msbuild DHConnectWifi\DHConnectWIFI.sln /restore /t:Build /p:Configuration=Release /p:Platform=${{ matrix.msbuild_platform }} /v:minimal
 
       - name: Verify build output
         shell: pwsh
         run: |
-          $exePath = "output\${{ matrix.platform }}\Release\DHConnectWIFI.exe"
+          $exePath = "output\${{ matrix.output_platform }}\Release\DHConnectWIFI.exe"
           if (-not (Test-Path -LiteralPath $exePath)) {
             throw "Build output not found: $exePath"
           }
@@ -38,8 +46,8 @@ jobs:
       - name: Upload platform artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DHConnectWIFI-${{ matrix.platform }}
-          path: output\${{ matrix.platform }}\Release\*
+          name: ${{ matrix.artifact_name }}
+          path: output\${{ matrix.output_platform }}\Release\*
 
   package-and-release:
     needs: build-and-release
