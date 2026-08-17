@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v*.*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ "Win32", "x64" ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build solution (Release)
+        run: msbuild DHConnectWifi\DHConnectWIFI.sln /restore /t:Build /p:Configuration=Release /p:Platform=${{ matrix.platform }} /v:minimal
+
+      - name: Verify build output
+        shell: pwsh
+        run: |
+          $exePath = "output\${{ matrix.platform }}\Release\DHConnectWIFI.exe"
+          if (-not (Test-Path -LiteralPath $exePath)) {
+            throw "Build output not found: $exePath"
+          }
+
+      - name: Upload platform artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DHConnectWIFI-${{ matrix.platform }}
+          path: output\${{ matrix.platform }}\Release\*
+
+  package-and-release:
+    needs: build-and-release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Win32 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: DHConnectWIFI-Win32
+          path: package\Win32
+
+      - name: Download x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: DHConnectWIFI-x64
+          path: package\x64
+
+      - name: Add project documents
+        shell: pwsh
+        run: |
+          Copy-Item -LiteralPath "README.md" -Destination "package\README.md"
+          Copy-Item -LiteralPath "LICENSE" -Destination "package\LICENSE"
+          if (Test-Path -LiteralPath "CHANGELOG.md") {
+            Copy-Item -LiteralPath "CHANGELOG.md" -Destination "package\CHANGELOG.md"
+          }
+
+      - name: Create release zip
+        shell: pwsh
+        run: |
+          $zipPath = "DHConnectWIFI-${{ github.ref_name }}-win32-x64.zip"
+          if (Test-Path -LiteralPath $zipPath) {
+            Remove-Item -LiteralPath $zipPath -Force
+          }
+          Compress-Archive -Path "package\*" -DestinationPath $zipPath
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: DHConnectWIFI-${{ github.ref_name }}-win32-x64.zip
+          generate_release_notes: true

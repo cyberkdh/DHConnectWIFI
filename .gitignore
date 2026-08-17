@@ -13,7 +13,5 @@
 /DHConnectWifi/x64
 /DHConnectWifi/DHConnectWIFI.aps
 /DHConnectWifi/DHConnectWIFI.vcxproj.user
-/output/obj
-/output/x64/Debug
-/output/Win32/Debug
+/output/
 *.pdb
