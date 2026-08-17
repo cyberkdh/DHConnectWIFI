@@ -78,6 +78,11 @@ jobs:
             Copy-Item -LiteralPath "CHANGELOG.md" -Destination "package\CHANGELOG.md"
           }
 
+      - name: Remove debug symbols from release package
+        shell: pwsh
+        run: |
+          Get-ChildItem -LiteralPath "package" -Filter "*.pdb" -File -Recurse | Remove-Item -Force
+
       - name: Create release zip
         shell: pwsh
         run: |
